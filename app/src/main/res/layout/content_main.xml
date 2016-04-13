@@ -19,7 +19,6 @@
             android:layout_height="wrap_content"
             android:id="@+id/edtCity"
             android:width="0dp"
-            android:text="蒙自"
             android:layout_weight="1" />
 
         <Button
