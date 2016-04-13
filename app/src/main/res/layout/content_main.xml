@@ -19,13 +19,15 @@
             android:layout_height="wrap_content"
             android:id="@+id/edtCity"
             android:width="0dp"
+            android:text="蒙自"
             android:layout_weight="1" />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Go"
-            android:id="@+id/btnExec" />
+            android:id="@+id/btnExec"
+            android:onClick="fetchWeatherInfo" />
     </LinearLayout>
 
     <TextView
