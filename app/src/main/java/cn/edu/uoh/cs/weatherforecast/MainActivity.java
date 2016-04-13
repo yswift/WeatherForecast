@@ -1,6 +1,8 @@
 package cn.edu.uoh.cs.weatherforecast;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -15,12 +17,15 @@ import android.widget.TextView;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
+    public final static String StoreKey = "cn.edu.uoh.cs.weatherforecast.cityname";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        // 恢复保存的城市名称
+        loadCityName();
     }
 
     /**
@@ -35,6 +40,29 @@ public class MainActivity extends AppCompatActivity {
         // 调用异步任务类，访问网络，获取数据
         NetTask task = new NetTask();
         task.execute(cityName);
+        // 保存城市名称
+        saveCityName(cityName);
+    }
+
+    /**
+     * 保存城市名称
+     * @param cityName 城市名称
+     */
+    private void saveCityName(String cityName) {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(StoreKey, cityName);
+        editor.apply();
+    }
+
+    /**
+     * 恢复保存的城市名称，如果没有就使用默认的城市：蒙自
+     */
+    private void loadCityName() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        String cityName = sharedPref.getString(StoreKey, "蒙自");
+        EditText edtCity = (EditText) findViewById(R.id.edtCity);
+        edtCity.setText(cityName);
     }
 
     /**
