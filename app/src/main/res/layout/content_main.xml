@@ -9,8 +9,33 @@
     tools:context="cn.edu.uoh.cs.weatherforecast.MainActivity"
     tools:showIn="@layout/activity_main">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="正在获取..."
+        android:id="@+id/txtRefresh"
+        android:layout_gravity="center_horizontal"
+        android:textSize="40sp"
+        android:textIsSelectable="true"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/txtTemperature"
+        android:layout_gravity="center_horizontal"
+        android:textSize="50sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/txtWeather"
+        android:layout_gravity="center_horizontal"
+        android:textSize="10dp" />
+
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/listView" />
+        android:id="@+id/listView"
+        android:padding="8dp" />
 </LinearLayout>

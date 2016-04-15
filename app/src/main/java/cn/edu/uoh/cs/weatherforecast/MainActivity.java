@@ -78,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
             toolbar.setTitle("请添加城市");
             return;
         }
+        // 显示正式刷新的提示
+        View txtRefresh = findViewById(R.id.txtRefresh);
+        txtRefresh.setVisibility(View.VISIBLE);
         // 调用异步任务类，访问网络，获取数据
         NetTask task = new NetTask(this);
         task.execute(cityName);
@@ -95,6 +98,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void showForecastList(String json) {
+        // 隐藏正式刷新的提示
+        View txtRefresh = findViewById(R.id.txtRefresh);
+        txtRefresh.setVisibility(View.GONE);
+
         // 把json字符串转换为WeatherInfo对象
         Gson gson = new Gson();
         WeatherInfo weatherInfo = gson.fromJson(json, WeatherInfo.class);
@@ -113,6 +120,12 @@ public class MainActivity extends AppCompatActivity {
             toolbar.setTitle("请添加城市");
             return;
         }
+        // 显示当前温度，和今天天气
+        TextView txtTemperature = (TextView) findViewById(R.id.txtTemperature);
+        txtTemperature.setText(weatherInfo.getData().getWendu() + "℃");
+        TextView txtWeather = (TextView) findViewById(R.id.txtWeather);
+        txtWeather.setText(weatherInfo.getData().getForecast().get(0).getType());
+
         // 把WeatherInfo对象转换为List<Map<String, Object>>对象
         List<Map<String, Object>> dataList = WeatherInfo2SimpleAdapterData.convert(weatherInfo);
 
