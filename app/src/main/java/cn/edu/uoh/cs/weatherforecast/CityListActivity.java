@@ -11,6 +11,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 
 public class CityListActivity extends AppCompatActivity {
+    private static final String tag = "MainActivity";
+
     private CityList cityList;
 
     @Override
@@ -52,6 +54,11 @@ public class CityListActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+        // 单击返回按钮时，调用finish方法，使主Activity能触发返回事件
+        if (id == android.R.id.home) {
+            finish();
+            return true;
+        }
         // 单击删除按钮时删除选中的城市
         if (id == R.id.remove_city) {
             removeCity();

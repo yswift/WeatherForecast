@@ -24,12 +24,19 @@ public class CityList {
     }
 
     /**
+     * 主key
+     */
+    public final static String Key = "cn.edu.uoh.cs.weatherforecast";
+
+    /**
      * 城市列表存储key
      */
     public final static String StoreListKey = "cn.edu.uoh.cs.weatherforecast.citynameList";
 
     private ArrayList<String> cityList = new ArrayList<>();
     private ChangeListener listener;
+    private String currentCityName = null;
+    private int currentCityIndex = -1;
 
     private CityList() {
         // 阻止New
@@ -41,31 +48,55 @@ public class CityList {
      * @return CityList
      */
     public static CityList load(Activity activity) {
-        SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
-        String cityNames = sharedPref.getString(StoreListKey, "[蒙自]");
-        // 转换字符串到数组
-        Gson gson = new Gson();
-        String[] cityArray = gson.fromJson(cityNames, String[].class);
-        // 建立CityList对象并赋值
+        // 建立CityList对象
         CityList list = new CityList();
-        Collections.addAll(list.cityList, cityArray);
+        // 加载城市列表
+        list.reload(activity);
         return list;
     }
 
     /**
-     * 保存城市列表
-     * @param activity
+     * 当修改城市列表后调用此方法，获取新的城市信息，和更新当前城市
+     * @param context context
      */
-    public void save(Activity activity) {
+    public void reload(Context context) {
+        SharedPreferences sharedPref = context.getSharedPreferences(Key, Context.MODE_PRIVATE);
+        String cityNames = sharedPref.getString(StoreListKey, "[蒙自]");
+        // 转换字符串到数组
+        Gson gson = new Gson();
+        String[] cityArray = gson.fromJson(cityNames, String[].class);
+        // 赋值
+        Collections.addAll(cityList, cityArray);
+        // 更新当前城市
+        if (cityList.isEmpty()) {
+            currentCityIndex = -1;
+            currentCityName = null;
+            return;
+        }
+        // 确定是否需要更新当前城市
+        if (currentCityName == null || !cityList.contains(currentCityName)) {
+            currentCityName = cityList.get(0);
+            currentCityIndex = 0;
+            return;
+        }
+        // 更新当前城市的索引位置
+        currentCityIndex = cityList.indexOf(currentCityName);
+    }
+
+    /**
+     * 保存城市列表
+     * @param context
+     */
+    public void save(Context context) {
         // 转换成数组
         String[] cityArray = cityList.toArray(new String[cityList.size()]);
         // 转换成Json字符串
         Gson gson = new Gson();
         String cityJson = gson.toJson(cityArray);
         // 保存
-        SharedPreferences sharedPref =activity.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences sharedPref =context.getSharedPreferences(Key, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(MainActivity.StoreListKey, cityJson);
+        editor.putString(StoreListKey, cityJson);
         editor.apply();
     }
 
@@ -118,5 +149,13 @@ public class CityList {
     public void remove(int position) {
         cityList.remove(position);
         onChange();
+    }
+
+    /**
+     * 取当前城市名
+     * @return 当前城市名
+     */
+    public String getCurrentCityName() {
+        return currentCityName;
     }
 }

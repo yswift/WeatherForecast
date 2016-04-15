@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,8 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-    public final static String StoreKey = "cn.edu.uoh.cs.weatherforecast.cityname";
-    public final static String StoreListKey = "cn.edu.uoh.cs.weatherforecast.citynameList";
+    private static final String tag = "MainActivity";
+
+    private CityList cityList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,45 +36,38 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         // 恢复保存的城市名称
-        loadCityName();
+        reloadCityList();
+        // 刷新天气
+        refreshWeatherInfo();
     }
 
     /**
-     * 单击按钮Go时执行此方法，获取天气信息并显示
-     *
-     * @param view view
+     * 刷新天气情况
      */
-    public void fetchWeatherInfo(View view) {
-        // 取得输入框中的城市名称
-        EditText edtCity = (EditText) findViewById(R.id.edtCity);
-        String cityName = edtCity.getText().toString();
+    private void refreshWeatherInfo() {
+        // 城市名称
+        String cityName = cityList.getCurrentCityName();
+        Log.i(tag, "refresh weather: " + cityName);
+        // 修改工具栏标题
+        if (cityName == null) {
+            Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+            toolbar.setTitle("请添加城市");
+            return;
+        }
         // 调用异步任务类，访问网络，获取数据
         NetTask task = new NetTask();
         task.execute(cityName);
-        // 保存城市名称
-        saveCityName(cityName);
     }
 
     /**
-     * 保存城市名称
-     *
-     * @param cityName 城市名称
+     * 重新加载城市名列表
      */
-    private void saveCityName(String cityName) {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(StoreKey, cityName);
-        editor.apply();
-    }
-
-    /**
-     * 恢复保存的城市名称，如果没有就使用默认的城市：蒙自
-     */
-    private void loadCityName() {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        String cityName = sharedPref.getString(StoreKey, "蒙自");
-        EditText edtCity = (EditText) findViewById(R.id.edtCity);
-        edtCity.setText(cityName);
+    private void reloadCityList() {
+        if (cityList == null) {
+            cityList = CityList.load(this);
+        } else {
+            cityList.reload(this);
+        }
     }
 
     private void showForecastList(String json) {
@@ -83,6 +78,15 @@ public class MainActivity extends AppCompatActivity {
         // 判断是否正确的获取的数据，如果不是，显示错误信息，并返回
         if (!weatherInfo.getDesc().equals("OK")) {
             showError("获取天气信息出错。");
+        }
+        // 修改工具栏标题
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        String cityName = weatherInfo.getData().getCity();
+        if (cityName != null) {
+            toolbar.setTitle(cityName);
+        } else {
+            toolbar.setTitle("请添加城市");
+            return;
         }
         // 把WeatherInfo对象转换为List<Map<String, Object>>对象
         List<Map<String, Object>> dataList = WeatherInfo2SimpleAdapterData.convert(weatherInfo);
@@ -124,15 +128,34 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Intent intent = new Intent(this, CityListActivity.class);
-            startActivity(intent);
+        // 刷新天气情况
+        if (id == R.id.action_refresh) {
+            refreshWeatherInfo();
             return true;
         }
-
+        // 设置城市列表
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, CityListActivity.class);
+            startActivityForResult(intent, 1);
+            return true;
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * 重CityListActivity返回后执行此方法：
+     * 重新获取城市列表
+     * 刷新天气情况
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // 重新获取城市列表
+        reloadCityList();
+        // 刷新天气情况
+        refreshWeatherInfo();
     }
 
     // 定义内部类（异步任务），用于通过网络获取数据（Android不能在主线程中访问网络）
@@ -144,8 +167,10 @@ public class MainActivity extends AppCompatActivity {
             try {
                 // 获取调用execute方法时传入的参数：城市名
                 String cityName = params[0];
+                Log.i(tag, "Get weather： " + cityName);
                 // 获取天气信息，得到的是Json字符串
                 String json = HttpTools.getWeatherInfo(cityName);
+                Log.i(tag, json);
                 return json;
             } catch (IOException e) {
                 // 如果有异常，记录

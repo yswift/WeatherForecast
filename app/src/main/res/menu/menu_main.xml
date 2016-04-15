@@ -4,6 +4,11 @@
     tools:context="cn.edu.uoh.cs.weatherforecast.MainActivity">
 
     <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/ic_action_refresh"
+        android:title="刷新"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/action_settings"
         android:icon="@drawable/ic_setting"
         android:title="设置"
