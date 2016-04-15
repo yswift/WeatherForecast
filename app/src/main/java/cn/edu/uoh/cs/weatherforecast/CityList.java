@@ -168,4 +168,30 @@ public class CityList {
     public String getCurrentCityName() {
         return currentCityName;
     }
+
+    /**
+     * 在城市列表中，移动到前一个城市
+     * @return true 如果有前一个城市
+     */
+    public boolean previous() {
+        if (currentCityIndex > 0) {
+            currentCityIndex--;
+            currentCityName = cityList.get(currentCityIndex);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 在城市列表中，移动到后一个城市
+     * @return true 如果有后一个城市
+     */
+    public boolean next() {
+        if (currentCityIndex < cityList.size()-1) {
+            currentCityIndex++;
+            currentCityName = cityList.get(currentCityIndex);
+            return true;
+        }
+        return false;
+    }
 }

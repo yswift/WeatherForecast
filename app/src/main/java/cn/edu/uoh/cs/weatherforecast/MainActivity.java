@@ -10,6 +10,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,6 +19,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -25,9 +28,12 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String tag = "MainActivity";
+    static final String tag = "MainActivity";
 
     private CityList cityList;
+
+    //定义手势检测器实例
+    GestureDetector detector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +45,25 @@ public class MainActivity extends AppCompatActivity {
         reloadCityList();
         // 刷新天气
         refreshWeatherInfo();
+        //创建手势检测器
+        detector = new GestureDetector(this, new GestureDetectorListener(this));
     }
+
+    /**
+     * 在事件dispatch时处理触摸手势。
+     * @param ev event
+     * @return super.dispatchTouchEvent(ev)
+     */
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        this.detector.onTouchEvent(ev);
+        return super.dispatchTouchEvent(ev);
+    }
+
+    //将该activity上的触碰事件交给GestureDetector处理
+//    public boolean onTouchEvent(MotionEvent me){
+//        return detector.onTouchEvent(me);
+//    }
 
     /**
      * 刷新天气情况
@@ -55,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         // 调用异步任务类，访问网络，获取数据
-        NetTask task = new NetTask();
+        NetTask task = new NetTask(this);
         task.execute(cityName);
     }
 
@@ -70,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showForecastList(String json) {
+    void showForecastList(String json) {
         // 把json字符串转换为WeatherInfo对象
         Gson gson = new Gson();
         WeatherInfo weatherInfo = gson.fromJson(json, WeatherInfo.class);
@@ -78,10 +102,11 @@ public class MainActivity extends AppCompatActivity {
         // 判断是否正确的获取的数据，如果不是，显示错误信息，并返回
         if (!weatherInfo.getDesc().equals("OK")) {
             showError("获取天气信息出错。");
+            return;
         }
         // 修改工具栏标题
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        String cityName = weatherInfo.getData().getCity();
+        String cityName = cityList.getCurrentCityName();
         if (cityName != null) {
             toolbar.setTitle(cityName);
         } else {
@@ -146,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
      * 重CityListActivity返回后执行此方法：
      * 重新获取城市列表
      * 刷新天气情况
+     *
      * @param requestCode
      * @param resultCode
      * @param data
@@ -158,38 +184,24 @@ public class MainActivity extends AppCompatActivity {
         refreshWeatherInfo();
     }
 
-    // 定义内部类（异步任务），用于通过网络获取数据（Android不能在主线程中访问网络）
-    class NetTask extends AsyncTask<String, Void, String> {
-        IOException exception = null;
-
-        @Override
-        protected String doInBackground(String... params) {
-            try {
-                // 获取调用execute方法时传入的参数：城市名
-                String cityName = params[0];
-                Log.i(tag, "Get weather： " + cityName);
-                // 获取天气信息，得到的是Json字符串
-                String json = HttpTools.getWeatherInfo(cityName);
-                Log.i(tag, json);
-                return json;
-            } catch (IOException e) {
-                // 如果有异常，记录
-                exception = e;
-                return null;
-            }
+    /**
+     * 切换到前一个城市，如果成功，刷新天气
+     */
+    public void previous() {
+        if (cityList.previous()) {
+            // 如果有前一个城市，刷新天气情况
+            refreshWeatherInfo();
         }
+    }
 
-        @Override
-        protected void onPostExecute(String result) {
-            if (exception == null) {
-                // 显示获取的信息
-                // TextView txtInfo = (TextView) findViewById(R.id.txtInfo);
-                // txtInfo.setText(result);
-                showForecastList(result);
-            } else {
-                // 如果有异常，显示错误消息
-                showError("获取天气信息失败：" + exception.getMessage());
-            }
+    /**
+     * 切换到后一个城市，如果成功，刷新天气
+     */
+    public void next() {
+        if (cityList.next()) {
+            // 如果有后一个城市，刷新天气情况
+            refreshWeatherInfo();
         }
     }
 }
+
