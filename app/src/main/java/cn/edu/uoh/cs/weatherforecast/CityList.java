@@ -66,6 +66,7 @@ public class CityList {
         Gson gson = new Gson();
         String[] cityArray = gson.fromJson(cityNames, String[].class);
         // 赋值
+        cityList.clear();
         Collections.addAll(cityList, cityArray);
         // 更新当前城市
         if (cityList.isEmpty()) {
