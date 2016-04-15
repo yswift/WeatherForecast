@@ -1,14 +1,8 @@
 package cn.edu.uoh.cs.weatherforecast;
 
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Layout;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,10 +10,8 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import com.google.gson.Gson;
-
 public class CityListActivity extends AppCompatActivity {
-    ArrayAdapter<String> adapter;
+    private CityList cityList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,15 +28,16 @@ public class CityListActivity extends AppCompatActivity {
      */
     private void InitListView() {
         // 获取保存的城市列表
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        String cityNames = sharedPref.getString(MainActivity.StoreListKey, "[蒙自]");
-        // 转换字符串到数组
-        Gson gson = new Gson();
-        String[] cityArray = gson.fromJson(cityNames, String[].class);
-        // 建立List adapter，simple_list_item_1是已定义的layout
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
-        // 添加城市列表
-        adapter.addAll(cityArray);
+        cityList = CityList.load(this);
+        // 建立ListView的数据adapter
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, cityList.getCityList());
+        // 注册城市列表改变事件, 当城市列表改变时，通知adapter，
+        cityList.setChangeListener(new CityList.ChangeListener() {
+            @Override
+            public void onChange() {
+                adapter.notifyDataSetChanged();
+            }
+        });
         // 设置ListView
         ListView listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
@@ -79,12 +72,11 @@ public class CityListActivity extends AppCompatActivity {
     private void removeCity() {
         ListView listView = (ListView) findViewById(R.id.listView);
         int position = listView.getCheckedItemPosition();
-        if (position < 0 || position >= adapter.getCount()) {
+        if (position < 0 || position >= cityList.size()) {
             return;
         }
-        String city = adapter.getItem(position);
-        adapter.remove(city);
-        saveCityList();
+        cityList.remove(position);
+        cityList.save(this);
     }
 
     /**
@@ -97,8 +89,8 @@ public class CityListActivity extends AppCompatActivity {
         String cityName = edtCity.getText().toString();
         // 如果输入不是空，添加到列表
         if (cityName.trim().length() > 0) {
-            adapter.add(cityName);
-            saveCityList();
+            cityList.add(cityName);
+            cityList.save(this);
         }
         // 清空输入
         edtCity.setText("");
@@ -107,22 +99,4 @@ public class CityListActivity extends AppCompatActivity {
         addLayout.setVisibility(View.GONE);
     }
 
-    /**
-     * 保存城市列表，当添加、删除完成后调用此方法。
-     */
-    private void saveCityList() {
-        // 获取城市列表
-        String[] cityArray = new String[adapter.getCount()];
-        for (int i = 0; i < cityArray.length; i++) {
-            cityArray[i] = adapter.getItem(i);
-        }
-        // 转换成Json字符串
-        Gson gson = new Gson();
-        String cityJson = gson.toJson(cityArray);
-        // 保存
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(MainActivity.StoreListKey, cityJson);
-        editor.apply();
-    }
 }
