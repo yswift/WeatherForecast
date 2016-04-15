@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">WeatherForecast</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_city_list">城市列表</string>
 </resources>
