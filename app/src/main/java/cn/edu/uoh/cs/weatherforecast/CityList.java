@@ -3,6 +3,7 @@ package cn.edu.uoh.cs.weatherforecast;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -22,6 +23,8 @@ public class CityList {
     public interface ChangeListener {
         void onChange();
     }
+
+    private static final String tag = "CityList";
 
     /**
      * 主key
@@ -62,10 +65,12 @@ public class CityList {
     public void reload(Context context) {
         SharedPreferences sharedPref = context.getSharedPreferences(Key, Context.MODE_PRIVATE);
         String cityNames = sharedPref.getString(StoreListKey, "[蒙自]");
+        Log.i(tag, "load json:" + cityNames);
         // 转换字符串到数组
         Gson gson = new Gson();
         String[] cityArray = gson.fromJson(cityNames, String[].class);
         // 赋值
+        cityList.clear();
         Collections.addAll(cityList, cityArray);
         // 更新当前城市
         if (cityList.isEmpty()) {
@@ -74,13 +79,17 @@ public class CityList {
             return;
         }
         // 确定是否需要更新当前城市
-        if (currentCityName == null || !cityList.contains(currentCityName)) {
+        if (currentCityName == null) {
             currentCityName = cityList.get(0);
             currentCityIndex = 0;
             return;
         }
         // 更新当前城市的索引位置
         currentCityIndex = cityList.indexOf(currentCityName);
+        if (currentCityIndex == -1) {
+            currentCityName = cityList.get(0);
+            currentCityIndex = 0;
+        }
     }
 
     /**
@@ -94,6 +103,7 @@ public class CityList {
         Gson gson = new Gson();
         String cityJson = gson.toJson(cityArray);
         // 保存
+        Log.i(tag, "save json:" + cityJson);
         SharedPreferences sharedPref =context.getSharedPreferences(Key, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(StoreListKey, cityJson);
