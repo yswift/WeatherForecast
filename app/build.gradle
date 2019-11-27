@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    compileSdkVersion 28
+    buildToolsVersion "29.0.2"
 
     defaultConfig {
         applicationId "cn.edu.uoh.cs.weatherforecast"
-        minSdkVersion 14
-        targetSdkVersion 23
+        minSdkVersion 24
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
     }
@@ -20,9 +20,12 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.2.1'
-    compile 'com.android.support:design:23.2.1'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    //noinspection GradleDynamicVersion
+    implementation 'com.android.support:appcompat-v7:28+'
+    implementation 'com.android.support:design:28+'
     compile files('libs/gson-2.6.2.jar')
+
+    testImplementation 'junit:junit:4.12'
 }
